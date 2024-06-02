@@ -31,7 +31,6 @@ class LessonTestCase(APITestCase):
             is_moderator=True
         )
 
-        # Создание группы 'moderator' и добавление пользователя-модератора в эту группу
         moderator_group, created = Group.objects.get_or_create(name='moderator')
         self.moderator.groups.add(moderator_group)
 
@@ -57,6 +56,6 @@ class LessonTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_lesson_destroy(self):
-        self.client.force_authenticate(user=self.lesson.owner)  # Используем объект пользователя для аутентификации
+        self.client.force_authenticate(user=self.lesson.owner)
         response = self.client.delete(reverse('materials:lesson_destroy', kwargs={'pk': self.lesson.id}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
