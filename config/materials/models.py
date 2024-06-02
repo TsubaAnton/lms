@@ -18,10 +18,10 @@ class Course(models.Model):
 
 
 class Lesson(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название')
-    description = models.TextField(verbose_name='Описание')
+    name = models.CharField(max_length=100, verbose_name='Название', blank=False)
+    description = models.TextField(verbose_name='Описание', blank=False)
     preview = models.ImageField(upload_to='materials/', verbose_name='Превью', **NULLABLE)
-    url = models.URLField(verbose_name='Ссылка на видео')
+    url = models.URLField(verbose_name='Ссылка на видео', blank=False)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons', verbose_name='Курс', null=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='Владелец', related_name='lessons', **NULLABLE)
 

@@ -4,11 +4,13 @@ from .models import Course, Lesson
 from .serializers import CourseSerializer, LessonSerializer
 from users.permissions import IsModerator
 from .permissions import IsOwner
+from .paginators import MaterialsPaginator
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     queryset = Course.objects.all()
+    pagination_class = MaterialsPaginator
 
     def get_permissions(self):
         if self.action == 'create':
@@ -27,6 +29,7 @@ class LessonListAPIView(generics.ListAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsModerator | IsOwner]
+    pagination_class = MaterialsPaginator
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
