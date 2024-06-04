@@ -13,7 +13,8 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = '__all__'
+        fields = ['id', 'user', 'course', 'lesson', 'amount_payment', 'payment_method', 'payment_date']
+        read_only_fields = ['id', 'user', 'payment_date']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

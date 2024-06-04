@@ -8,6 +8,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from materials.models import Course
 from rest_framework.response import Response
+from .services import create_product, create_price, create_session
 
 
 class PaymentListAPIView(generics.ListAPIView):
@@ -16,6 +17,34 @@ class PaymentListAPIView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['course', 'lesson', 'payment_method']
     ordering_fields = ['payment_date']
+    permission_classes = [IsAuthenticated]
+
+
+class PaymentCreateAPIView(generics.CreateAPIView):
+    serializer_class = PaymentSerializer
+    queryset = Payment.objects.all()
+
+    def perform_create(self, serializer):
+        payment = serializer.save(user=self.request.user)
+        stripe_product = create_product(payment.course)
+        stripe_price = create_price(payment.amount_payment, stripe_product)
+        stripe_session_id, payment_url, status = create_session(stripe_price)
+
+        payment.stripe_session_id = stripe_session_id
+        payment.payment_url = payment_url
+        payment.save()
+
+        return {
+            "payment_url": payment_url,
+            "stripe_session_id": stripe_session_id,
+            "status": status
+        }
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        response_data = self.perform_create(serializer)
+        return Response(response_data)
 
 
 class UserCreateAPIView(generics.CreateAPIView):
