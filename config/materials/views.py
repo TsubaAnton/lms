@@ -5,6 +5,7 @@ from .serializers import CourseSerializer, LessonSerializer
 from users.permissions import IsModerator
 from .permissions import IsOwner
 from .paginators import MaterialsPaginator
+from .tasks import send_course_update_mail
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -23,6 +24,10 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        send_course_update_mail.delay(instance.id)
 
 
 class LessonListAPIView(generics.ListAPIView):
