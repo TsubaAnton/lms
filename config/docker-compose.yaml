@@ -1,0 +1,76 @@
+version: "3"
+
+services:
+  db:
+    image: postgres
+    restart: on-failure
+    env_file:
+      - ./.env
+    expose:
+      - "5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "-c", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  redis:
+    image: redis
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+    expose:
+      - "6379"
+
+  app:
+    build: .
+    tty: true
+    ports:
+      - "8000:8000"
+    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+
+  celery:
+    build: .
+    tty: true
+    command: celery -A config worker -l INFO -P eventlet
+    restart: on-failure
+    depends_on:
+      - redis
+      - db
+      - app
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+
+  celery_beat:
+    build: .
+    tty: true
+    command: celery -A config beat -l INFO
+    restart: on-failure
+    depends_on:
+      - redis
+      - app
+      - db
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+
+volumes:
+  pg_data:
+
